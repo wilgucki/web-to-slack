@@ -1,0 +1,36 @@
+version: "3.7"
+services:
+#  webapp:
+    # client web site (nginx, html, etc)
+  websocket:
+    build: .
+    image: websocket
+    command: python websocket-server.py
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./:/code"
+    depends_on:
+      - redis_db
+  slackapp:
+    build: .
+    image: slackapp
+    command: python slack-app.py
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./:/code"
+    depends_on:
+      - redis_db
+  slackmessage:
+    build: .
+    image: slackmessage
+    command: python slack-publisher.py
+    volumes:
+      - "./:/code"
+    depends_on:
+      - redis_db
+  redis_db:
+    image: redis:5
+    ports:
+      - "6379:6379"

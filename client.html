@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>websocket client</title>
+    <style>
+        body > div {
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        #form2 {
+            display: none;
+        }
+
+        #chat .chat-message {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <form id="form1" method="post">
+        <div>
+            <label for="name">Your Name</label>
+            <input type="text" name="name" id="name">
+        </div>
+        <div>
+            <label for="subject">What do you want to talk about?</label>
+            <select name="subject" id="subject">
+                <option value="prices">prices</option>
+                <option value="support">support</option>
+                <option value="bugs">bugs</option>
+            </select>
+        </div>
+        <button id="start-chat">Start chat</button>
+    </form>
+
+    <form id="form2" method="post">
+        <div id="chat"></div>
+        <textarea name="message" id="message" rows="10" cols="70"></textarea>
+        <button id="send-message">Send Message</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
+        crossorigin="anonymous"></script>
+<script>
+    var connection;
+    var name, subject;
+
+    $(document).ready(function () {
+        $('#form1').submit(function () {
+            name = $('#name').val();
+            subject = $('#subject').val();
+
+            $('#form1').hide();
+            $('#form2').show();
+
+            connection = new WebSocket('ws://127.0.0.1:8888/chat');
+
+            connection.onopen = function () {
+                /*
+                var message = {
+                    'action': 'init',
+                    'name': name,
+                    'subject': subject
+                };
+                this.send(JSON.stringify(message));
+                console.log(JSON.stringify(message));
+                 */
+                console.log('open');
+            };
+
+            connection.onclose = function () {
+                console.log('close');
+            };
+
+            connection.onmessage = function (e) {
+                var message = JSON.parse(e.data);
+                $('#chat').append('<div class="chat-message">' +
+                    '<p class="meta">'+message.date+' '+message.author+'</p>' +
+                    '<p class="msg">'+message.message+'</p>' +
+                    '</div>');
+            };
+
+            return false;
+        });
+
+        $('#form2').submit(function () {
+            var message = {
+                'author': name,
+                'subject': subject,
+                'message': $('#message').val()
+            };
+            connection.send(JSON.stringify(message));
+
+            $('#chat').append('<div class="chat-message">' +
+                '<p class="meta">'+ new Date() +' '+message.author+'</p>' +
+                '<p class="msg">'+message.message+'</p>' +
+                '</div>');
+            $('#message').val('');
+
+            return false;
+        });
+    });
+</script>
+</body>
+</html>
